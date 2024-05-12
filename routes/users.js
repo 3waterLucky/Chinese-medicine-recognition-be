@@ -44,7 +44,7 @@ router.post('/login', (req, res) => {
         name: user.user_name,
         auth: user.auth
       },
-      'zjz',
+      'zjz-ujs',
       {
         expiresIn: 86400
       }
@@ -79,7 +79,7 @@ router.get('/list', (req, res) => {
       }).catch(err => {
         console.error(err)
         res.status(500).send(err)
-      }
+      })
     } else {
       res.status(403).send({
         code: 403,
