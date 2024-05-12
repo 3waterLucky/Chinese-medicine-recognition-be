@@ -1,6 +1,6 @@
 CREATE TABLE users(
 	user_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    user_account VARCHAR(15) NOT NULL,
+    user_account VARCHAR(15) NOT NULL UNIQUE,
     user_name VARCHAR(16) NOT NULL,
     pwd VARCHAR(100) NOT NULL,
     auth INT NOT NULL DEFAULT 0
@@ -33,7 +33,7 @@ CREATE TABLE collection(
     FOREIGN KEY (m_id) REFERENCES medicine(m_id)
 );
 
-CREATE TABLE score(
+CREATE TABLE game(
 	id INT PRIMARY KEY,
     score INT DEFAULT 0,
     playtimes INT DEFAULT 0,
@@ -43,4 +43,4 @@ CREATE TABLE score(
 CREATE TRIGGER add_score_item 
 AFTER INSERT ON users
 FOR EACH ROW
-	INSERT INTO score(id) VALUE(new.user_id);
+	INSERT INTO game(id) VALUE(new.user_id);

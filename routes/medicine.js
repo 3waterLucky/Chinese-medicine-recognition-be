@@ -16,7 +16,10 @@ router.get('/list', (req, res) => {
     })
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '获取中草药列表失败！'
+    })
   })
 })
 
@@ -35,7 +38,18 @@ router.get('/detail', (req, res) => {
     })
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    // 如果在数据库中找不到这个id对应的中草药，返回404
+    if (err.code === 'ER_EMPTY_QUERY') {
+      res.status(404).send({
+        code: 404,
+        message: '该中草药不存在！'
+      })
+    } else {
+      res.status(500).send({
+        code: 500,
+        message: '获取中草药详情失败！'
+      })
+    }
   })
 })
 
@@ -53,7 +67,10 @@ router.post('/collect', (req, res) => {
     })
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '收藏失败！'
+    })
   })
 })
 
@@ -78,7 +95,10 @@ router.post('/add', (req, res) => {
     })
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '添加中草药信息失败！'
+    })
   })
 })
 
@@ -96,7 +116,10 @@ router.get('/collectionList', (req, res) => {
     })
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '获取收藏夹信息失败！'
+    })
   })
 })
 

@@ -30,6 +30,12 @@ router.get('/question', (req, res) => {
     ).then(files => {
       ret.imgSrc = `http://127.0.0.1:8080/images/medicine/${ret.answer}/${files[0]}`
       res.send(ret)
+    }).catch(err => {
+      console.error(err)
+      res.status(500).send({
+        code: 500,
+        message: '获取题目失败！'
+      })
     })
 })
 
@@ -46,7 +52,10 @@ router.post('/score', (req, res) => {
     })
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '提交分数失败！'
+    })
   })
 })
 
@@ -58,7 +67,10 @@ router.get('/rank', (req, res) => {
     res.send(results)
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '获取排行榜失败！'
+    })
   })
 })
 
@@ -70,7 +82,10 @@ router.get('/record', (req, res) => {
     res.send(results)
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '获取游戏记录失败！'
+    })
   })
 })
 
