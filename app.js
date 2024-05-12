@@ -3,13 +3,13 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const expressJwt = require('express-jwt')
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const usersRouter = require('./routes/users');
 const recogRouter = require('./routes/recog')
 const gameRouter = require('./routes/game')
-//const fsPromises1 = require('./public/javascripts/copyImg')
-//const fsPromises2 = require('./public/javascripts/createPinyin')
+const medicineRouter = require('./routes/medicine')
+
 
 var app = express();
 
@@ -23,10 +23,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/recog', recogRouter)
 app.use('/game', gameRouter)
+app.use('/medicine', medicineRouter)
+
+app.use(expressJwt({
+  secret: 'zjz',
+  algorithms: ['HS256']
+}).unless({
+  path: ['/users/login', '/users/register', '/recog','/medicine/list', '/medicine/detail']
+})
+)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
