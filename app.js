@@ -9,13 +9,25 @@ const recogRouter = require('./routes/recog')
 const gameRouter = require('./routes/game')
 const medicineRouter = require('./routes/medicine')
 
-const { expressjwt } = require('express-jwt')
+const { expressjwt: jwt } = require('express-jwt')
 
 var app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.use(jwt({
+  secret: 'zjz-ujs',
+  algorithms: ['HS256'],
+  credentialsRequired: false,
+  getToken: function fromHeaderOrQuerystring (req) {
+    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+      return req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+      return req.query.token;
+    }
+    return null;
+  }
+}).unless({
+  path: ['/users/login', '/users/register', '/recog','/medicine/list', '/medicine/detail']
+}))
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -23,33 +35,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 app.use('/users', usersRouter);
 app.use('/recog', recogRouter)
 app.use('/game', gameRouter)
 app.use('/medicine', medicineRouter)
 
-app.use(expressjwt({
-  secret: 'zjz-ujs',
-  algorithms: ['HS256']
-}).unless({
-  path: ['/users/login', '/users/register', '/recog','/medicine/list', '/medicine/detail']
-}))
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+// 捕获token错误
+app.use(function (err, req, res, next) {
+  if (err.name === 'UnauthorizedError') {   
+    res.status(401).send('invalid token')
+  }
+})
 
 app.listen(8080, () => {
   console.log('listening on port 8080')

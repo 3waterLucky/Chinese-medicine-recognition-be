@@ -5,7 +5,7 @@ const { formidable } = require('formidable')
 const path = require('path')
 const fs = require('fs')
 const dict = require('../public/javascripts/dict')
-const { pool } = require('../config/db')
+const pool = require('../config/db')
 
 // 图像识别
 router.post('/', (req, res) => {
@@ -25,7 +25,7 @@ router.post('/', (req, res) => {
         console.error(error)
         res.status(500).send({
           code: 500,
-          message: error
+          message: '识别失败！'
         })
         fs.rm(imagePath, (err) => {
           console.log(err)
@@ -49,8 +49,8 @@ router.post('/', (req, res) => {
         // 将图片重命名为id.jpg
         fs.rename(imagePath, path.join(__dirname, `../public/images/recog/${id}.jpg`), (err) => {
           console.log(err)
-        })
-      }).then(() => pool.execute('SELECT m_id FROM medicine WHERE name = ?', [ret.name])
+        })  // TODO: 将中草药数据录入数据库，否则以下无法执行
+      }).then(() => pool.execute('SELECT m_id FROM medicine WHERE m_name = ?', [ret.name])
         // 从数据库的medicine表中查询ret.name的m_id
       ).then(([result]) => {
         // 将m_id放入ret中
@@ -62,7 +62,10 @@ router.post('/', (req, res) => {
         })
       }).catch(err => {
         console.error(err)
-        res.status(500).send(err)
+        res.status(500).send({
+          code: 500,
+          message: '识别失败！'
+        })
       })
     })
   })
@@ -81,7 +84,10 @@ router.post('/evaluate', (req, res) => {
     })
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '评价失败！'
+    })
   })
 })
 
@@ -99,7 +105,31 @@ router.get('/record', (req, res) => {
     )
   }).catch(err => {
     console.error(err)
-    res.status(500).send(err)
+    res.status(500).send({
+      code: 500,
+      message: '获取识别记录失败！'
+    })
+  })
+})
+
+// 获取识别准确率，从record表中找到所有score不为2的记录，计算其中score为1的比例
+router.get('/accuracy', (req, res) => {
+  pool.execute(
+    'SELECT * FROM record WHERE score != 2'
+  ).then(([results]) => {
+    const total = results.length
+    const correct = results.filter(item => item.score === 1).length
+    res.send({
+      code: 200,
+      message: 'success',
+      data: correct / total
+    })
+  }).catch(err => {
+    console.error(err)
+    res.status(500).send({
+      code: 500,
+      message: '获取准确率失败！'
+    })
   })
 })
 
