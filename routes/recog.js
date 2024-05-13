@@ -5,7 +5,7 @@ const { formidable } = require('formidable')
 const path = require('path')
 const fs = require('fs')
 const dict = require('../public/javascripts/dict')
-const { pool } = require('../config/db')
+const pool = require('../config/db')
 
 // 图像识别
 router.post('/', (req, res) => {
@@ -49,8 +49,8 @@ router.post('/', (req, res) => {
         // 将图片重命名为id.jpg
         fs.rename(imagePath, path.join(__dirname, `../public/images/recog/${id}.jpg`), (err) => {
           console.log(err)
-        })
-      }).then(() => pool.execute('SELECT m_id FROM medicine WHERE name = ?', [ret.name])
+        })  // TODO: 将中草药数据录入数据库，否则以下无法执行
+      }).then(() => pool.execute('SELECT m_id FROM medicine WHERE m_name = ?', [ret.name])
         // 从数据库的medicine表中查询ret.name的m_id
       ).then(([result]) => {
         // 将m_id放入ret中

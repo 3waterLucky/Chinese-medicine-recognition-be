@@ -6,13 +6,14 @@ const jwt = require('jsonwebtoken')
 const genToken = (user) => {
   return jwt.sign(
     {
-      _id: user.user_id,
-      name: user.user_name,
+      userId: user.user_id,
+      userAccount: user.user_account,
+      userName: encodeURIComponent(user.user_name),
       auth: user.auth
     },
     'zjz-ujs',
     {
-      expiresIn: 86400
+      expiresIn: '1d'
     }
   )
 }
@@ -25,11 +26,11 @@ router.post('/register', (req, res) => {
     [account, name, pwd]
   ).then(([results]) => {
     const id = results.insertId
-    const token = 'Bearer ' + genToken({ user_id: id, user_name: name, auth: 0 })
+    const token = genToken({ user_id: id, user_account: account, user_name: name, auth: 0 })
     res.status(201).send({
       code: 200,
       message: 'success',
-      data: { token: token }
+      token
     })
   }).catch(err => {
     if (err.code === 'ER_DUP_ENTRY') {
@@ -61,10 +62,11 @@ router.post('/login', (req, res) => {
       return
     }
     const user = results[0]
-    const token = 'Bearer ' + genToken(user)
-    res.json({
-      status: 'ok',
-      data: { token: token }
+    const token = genToken(user)
+    res.send({
+      code: 200,
+      message: 'success',
+      token
     })
   }).catch(err => {
     console.error(err)
@@ -109,7 +111,7 @@ router.get('/list', (req, res) => {
 })
 
 // 退出登录
-router.get('/logout', (req, res) => {
+router.post('/logout', (req, res) => {
   res.send({
     code: 200,
     message: 'success'

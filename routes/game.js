@@ -3,6 +3,7 @@ const router = express.Router()
 const fsPromise = require('fs/promises')
 const path = require('path')
 const pool = require('../config/db.js')
+const jwt = require('jsonwebtoken')
 
 // 获取题目
 router.get('/question', (req, res) => {
@@ -10,6 +11,16 @@ router.get('/question', (req, res) => {
     message: 'success',
     code: 200
   }
+  jwt.verify(req.headers.authorization.split(' ')[1], 'zjz-ujs', (err, user) => {
+    if (err) {
+      console.error('error', err)
+      res.status(401).send({
+        code: 401,
+        message: 'invalid token'
+      })
+    }
+    console.log('user', user)
+  })
   fsPromise.readdir(path.join(__dirname, '../public/images/medicine'))
     .then(files => {
       let options = []
