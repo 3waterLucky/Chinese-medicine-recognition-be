@@ -10,9 +10,9 @@ CREATE TABLE medicine(
 	m_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     m_name VARCHAR(10) NOT NULL,
     pinyin VARCHAR(30),
-    other_name VARCHAR(30),
-    origin VARCHAR(200),
-    env VARCHAR(200),
+    other_name VARCHAR(100),
+    origin VARCHAR(300),
+    env VARCHAR(300),
     form VARCHAR(300),
     flavor VARCHAR(100),
     functions VARCHAR(500),
@@ -22,7 +22,8 @@ CREATE TABLE medicine(
 CREATE TABLE record(
 	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     recog_result VARCHAR(10) NOT NULL,
-    score INT DEFAULT 2
+    score INT DEFAULT 2,
+    recog_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE collection(
