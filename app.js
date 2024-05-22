@@ -8,33 +8,37 @@ const usersRouter = require('./routes/users');
 const recogRouter = require('./routes/recog')
 const gameRouter = require('./routes/game')
 const medicineRouter = require('./routes/medicine')
-
-const { expressjwt: jwt } = require('express-jwt')
+const jwt = require('jsonwebtoken')
 
 var app = express();
 
-app.use(jwt({
-  secret: 'zjz-ujs',
-  algorithms: ['HS256'],
-  credentialsRequired: false,
-  getToken: function fromHeaderOrQuerystring (req) {
-    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-      return req.headers.authorization.split(' ')[1];
-    } else if (req.query && req.query.token) {
-      return req.query.token;
-    }
-    return null;
+// 无需验证token的请求
+const unless = ['/users/login', '/users/register', '/recog','/medicine/list', '/users/checkAccount']
+
+// 使用jwt.verify验证token
+app.use((req, res, next) => {
+  if (unless.includes(req.url) || req.url.startsWith('/images') || req.url.startsWith('/medicine/detail')){
+    next()
+  } else {
+    jwt.verify(req.headers.authorization.split(' ')[1], 'zjz-ujs', (err, user) => {
+      if (err) {
+        console.error('error', err)
+        res.status(401).send({
+          code: 401,
+          message: 'invalid token'
+        })
+      }
+      req.user = user
+      next()
+    })
   }
-}).unless({
-  path: ['/users/login', '/users/register', '/recog','/medicine/list', '/medicine/detail']
-}))
+})
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 app.use('/users', usersRouter);
 app.use('/recog', recogRouter)

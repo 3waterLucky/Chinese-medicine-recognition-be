@@ -16,7 +16,10 @@ router.post('/', (req, res) => {
   })
   form.parse(req, (err, fields, files) => {
     if (err) {
-      res.status(500).send(err)
+      res.status(500).send({
+        code: 500,
+        message: '识别失败！'
+      })
       return
     }
     const imagePath = files.image[0].filepath
@@ -49,16 +52,21 @@ router.post('/', (req, res) => {
         // 将图片重命名为id.jpg
         fs.rename(imagePath, path.join(__dirname, `../public/images/recog/${id}.jpg`), (err) => {
           console.log(err)
-        })  // TODO: 将中草药数据录入数据库，否则以下无法执行
+        })  
+        // TODO: 将中草药数据录入数据库，否则以下无法执行
       }).then(() => pool.execute('SELECT m_id FROM medicine WHERE m_name = ?', [ret.name])
         // 从数据库的medicine表中查询ret.name的m_id
       ).then(([result]) => {
         // 将m_id放入ret中
-        ret.m_id = result[0].m_id
+        if (result.length === 0) {
+          ret.m_id = -1
+        } else {
+          ret.m_id = result[0].m_id
+        }
         res.send({
           code: 200,
           message: 'success',
-          data: ret
+          ...ret
         })
       }).catch(err => {
         console.error(err)
@@ -93,6 +101,14 @@ router.post('/evaluate', (req, res) => {
 
 // 获取识别记录
 router.get('/record', (req, res) => {
+  // 验证用户权限
+  if (req.user.auth === 0) {
+    res.status(403).send({
+      code: 403,
+      message: '权限不足！'
+    })
+    return
+  }
   pool.execute(
     'SELECT * FROM record'
   ).then(([results]) => {
@@ -100,7 +116,7 @@ router.get('/record', (req, res) => {
       {
         code: 200,
         message: 'success',
-        data: results
+        records: results
       }
     )
   }).catch(err => {
@@ -122,13 +138,39 @@ router.get('/accuracy', (req, res) => {
     res.send({
       code: 200,
       message: 'success',
-      data: correct / total
+      accuracy: correct / total
     })
   }).catch(err => {
     console.error(err)
     res.status(500).send({
       code: 500,
       message: '获取准确率失败！'
+    })
+  })
+})
+
+// record表中有recog_date字段，类型为DATETIME，存储识别日期。从record表中统计近七日每日识别次数。
+router.get('/sevenDayData', (req, res) => {
+  pool.execute(
+    'SELECT recog_date FROM record WHERE recog_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)'
+  ).then(([results]) => {
+    const daily = new Array(7).fill(0)
+    const today = new Date()
+    results.forEach(item => {
+      const date = new Date(item.recog_date)
+      const diff = Math.floor((today - date) / (1000 * 60 * 60 * 24))
+      daily[6- diff]++
+    })
+    res.send({
+      code: 200,
+      message: 'success',
+      daily
+    })
+  }).catch(err => {
+    console.error(err)
+    res.status(500).send({
+      code: 500,
+      message: '获取数据失败！'
     })
   })
 })
